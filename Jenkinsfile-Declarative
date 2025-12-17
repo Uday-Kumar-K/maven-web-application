@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    tools {
+        maven 'MAVEN_11'
+        jdk 'JDK-8'
+        jdk 'JDK-11'
+    }
+    options {
+       buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')
+    }
+    triggers {
+       pollSCM '* * * * *'
+    }
+    stages {
+        stage('Git-checkout') {
+            steps {
+                git credentialsId: '090945f5-ffed-4881-95c0-ea74a28c5340', url: 'https://github.com/Uday-Kumar-K/maven-web-application.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+        stage('Sonar') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+        stage('Nexus') {
+            steps {
+                sh "mvn deploy"
+            }
+        }
+        stage('Tomcat') {
+            steps {
+                sshagent(['b4acdfe3-ff51-4b49-9f67-f9ee100d3416']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@43.205.126.22:/opt/apache-tomcat-9.0.113/webapps/"
+                }
+            }
+        }
+    }
+}
