@@ -1,0 +1,25 @@
+node{
+    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')), pipelineTriggers([pollSCM('* * * * *')])])
+    def mvnHome = tool name: 'MAVEN_11'
+    def jdk8Home = tool name: 'JDK-8'
+    def jdk11Home = tool name: 'JDK-11'
+    stage('Git_checkout') {
+        git credentialsId: '090945f5-ffed-4881-95c0-ea74a28c5340', url: 'https://github.com/Uday-Kumar-K/maven-web-application.git'
+    }
+    stage('Build') {
+        sh "${mvnHome}/bin/mvn clean package"
+    }
+    stage('Sonar-qube') {
+        env.JAVA_HOME = "${jdk11Home}"
+        sh "${mvnHome}/bin/mvn sonar:sonar"
+    }
+    stage('Nexus') {
+        env.JAVA_HOME = "${jdk8Home}"
+        sh "${mvnHome}/bin/mvn deploy"
+    }
+    stage('Tomcat') {
+        sshagent(['b4acdfe3-ff51-4b49-9f67-f9ee100d3416']) {
+            sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.198.184:/opt/apache-tomcat-9.0.113/webapps/"
+        }
+    }
+}
