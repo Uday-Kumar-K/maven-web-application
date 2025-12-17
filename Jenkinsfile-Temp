@@ -1,5 +1,6 @@
 node{
-    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')), pipelineTriggers([pollSCM('* * * * *')])])
+    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')), 
+    pipelineTriggers([pollSCM('* * * * *')])])
     def mvnHome = tool name: 'MAVEN_11'
     def jdk8Home = tool name: 'JDK-8'
     def jdk11Home = tool name: 'JDK-11'
@@ -19,7 +20,7 @@ node{
     }
     stage('Tomcat') {
         sshagent(['b4acdfe3-ff51-4b49-9f67-f9ee100d3416']) {
-            sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.198.184:/opt/apache-tomcat-9.0.113/webapps/"
+            sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@43.205.126.22:/opt/apache-tomcat-9.0.113/webapps/"
         }
     }
 }
